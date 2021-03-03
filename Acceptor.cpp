@@ -1,5 +1,5 @@
 #include "Acceptor.h"
-Acceptor::Acceptor(int epoll_fd):EventHandler(epoll_fd), _listen_fd(-1), _channel(NULL), _callbacks(NULL){
+Acceptor::Acceptor(int epoll_fd):_epoll_fd(epoll_fd), _listen_fd(-1), _channel(NULL), _callbacks(NULL){
 
 }
 Acceptor::~Acceptor(){}
@@ -11,7 +11,7 @@ void Acceptor::start(){
     _channel->set_callback(this);
 }
 
-int TcpServer::create_socket(){
+int Acceptor::create_socket(){
     _listen_fd = socket(AF_INET, SOCK_STREAM, 0);
     fcntl(_listen_fd, F_SETFL, O_NONBLOCK);
     int on = 1;

@@ -7,9 +7,9 @@ Channel::Channel(int epoll_fd, int socket_fd):_epoll_fd(epoll_fd),
 Channel::~Channel(){
 
 }
-void Channel::handle_events(){
+void Channel::handle_event(){
     if(_revents & EPOLLIN){
-        _callbacks->handle_events(_socket_fd);
+        _callbacks->handle_event(_socket_fd);
     }
 }
 void Channel::enable_read(){

@@ -1,21 +1,13 @@
 #ifndef _TCP_SERVER_H_
 #define _TCP_SERVER_H_
 
-#include <unistd.h>
-#include <fstream>
-#include <sys/socket.h>
-#include <errno.h>
-#include <arpa/inet.h>
 #include <vector>
 #include <map>
-#include "Channel.h"
+#include "Acceptor.h"
+#include "TcpConnection.h"
 using namespace std;
 
-#define PORT 6978
-#define MAX_LISTEN 10
-#define MAX_BUF_SIZE 100
-#define MAX_EVENTS 100
-class TcpServer {
+class TcpServer : public IAcceptorCallBack{
 public:
     TcpServer();
     ~TcpServer();

@@ -10,7 +10,7 @@ class Channel{
 public:
     Channel(int epoll_fd, int socket_fd);
     ~Channel();
-    void handle_events();
+    void handle_event();
     void enable_read();
     void set_callback(IChannelCallBack* callback){
         _callbacks = callback;

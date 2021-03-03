@@ -30,14 +30,14 @@ void TcpServer::start(){
         }
         vector<Channel*>::iterator iter = channel_array.begin();
         while(iter != channel_array.end()){
-            (*iter)->handle_events();
+            (*iter)->handle_event();
             iter++;
         }
     }
 
 }
 
-void newConnection(int connect_fd){
-    TcpConnection * handler = new TcpConnection(_epoll_fd, _socket_fd); // TODO Memory Leak
+void TcpServer::newConnection(int connect_fd){
+    TcpConnection * handler = new TcpConnection(_epoll_fd, connect_fd); // TODO Memory Leak
     _connections[connect_fd] = handler;
 }

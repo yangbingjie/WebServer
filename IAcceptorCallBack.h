@@ -2,6 +2,7 @@
 #define _IACCEPTOR_CALLBACK_H_
 
 class IAcceptorCallBack{
+public:
     virtual void newConnection(int connect_fd) = 0;
 };
 

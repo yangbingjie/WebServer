@@ -1,6 +1,6 @@
 #include "TcpConnection.h"
 
-TcpConnection::TcpConnection(int epoll_fd, int socket_fd):EventHandler(epoll_fd),_socket_fd(socket_fd){
+TcpConnection::TcpConnection(int epoll_fd, int socket_fd):_epoll_fd(epoll_fd),_socket_fd(socket_fd){
     _channel = new Channel(_epoll_fd, _socket_fd);
     _channel->enable_read();
     _channel->set_callback(this);
