@@ -3,24 +3,28 @@
 
 #include <unistd.h>
 #include <fstream>
-#include <iostream>
-#include <sys/epoll.h>
 #include <sys/socket.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <arpa/inet.h>
+#include <vector>
 #include <string.h>
+#include "Channel.h"
 using namespace std;
 
 #define PORT 6978
 #define MAX_LISTEN 10
 #define MAX_BUF_SIZE 100
 #define MAX_EVENTS 100
-class TcpServer{
+class TcpServer: public IChannelCallBack{
 public:
     TcpServer();
+    ~TcpServer();
     void start();
-    int create_epoll(int listen_fd);
     int create_socket();
+    virtual void handle_events(int socket_fd);
+private:
+    int _epoll_fd;
+    int _listen_fd;
+    struct epoll_event _events[MAX_EVENTS];
 };
-#endif
+#endif // _TCP_SERVER_H_

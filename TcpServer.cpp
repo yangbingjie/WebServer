@@ -1,15 +1,10 @@
 #include "TcpServer.h"
 
-TcpServer::TcpServer(){
+TcpServer::TcpServer():_epoll_fd(-1), _listen_fd(-1){
 
 }
-int TcpServer::create_epoll(int listen_fd){
-    int epoll_fd = epoll_create(1);
-    struct epoll_event ev;
-    ev.data.fd = listen_fd;
-    ev.events = EPOLLIN;
-    epoll_ctl(epoll_fd, EPOLL_CTL_ADD, listen_fd, &ev);
-    return epoll_fd;
+TcpServer::~TcpServer(){
+
 }
 int TcpServer::create_socket(){
     int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -30,48 +25,62 @@ int TcpServer::create_socket(){
     return listen_fd;
 }
 void TcpServer::start(){
-    int listen_fd = create_socket();
-    int epoll_fd = create_epoll(listen_fd);
-    int connect_fd;
-    char read_buf[MAX_BUF_SIZE];
-    struct sockaddr_in client_addr;
-    socklen_t clilen = sizeof(struct sockaddr_in);
-    struct epoll_event ev, events[MAX_EVENTS];
+    _listen_fd = create_socket();
+    _epoll_fd = epoll_create(1);
+
+    Channel* channel = new Channel(_epoll_fd, _listen_fd); // TODO Memory Leak
+    channel->enable_read();
+    channel->set_callback(this);
+    
     while (true){
-        int fds = epoll_wait(epoll_fd, events, MAX_EVENTS , -1);
+        int fds = epoll_wait(_epoll_fd, _events, MAX_EVENTS , -1);
         if (fds == -1){
             cout << "Epoll wait error: " << errno << endl;
         }
+        vector<Channel*>channel_array;
         for(int i = 0; i < fds; ++i){
-            if(events[i].data.fd == listen_fd){
-                connect_fd = accept(listen_fd, (sockaddr*)&client_addr, (socklen_t*)&clilen);
-                if (connect_fd > 0){
-                    cout << "Client Connect From " << inet_ntoa(client_addr.sin_addr) << ":" 
-                    << ntohs(client_addr.sin_port) << " with connect fd " << connect_fd << endl;
-                }else{
-                    cout << "Accept error: " << errno << endl;
-                }
-                ev.data.fd = connect_fd;
-                ev.events = EPOLLIN;
-                epoll_ctl(epoll_fd, EPOLL_CTL_ADD, connect_fd, &ev);
-            } else if (events[i].events == EPOLLIN){
-                bzero(read_buf, MAX_BUF_SIZE);
-                connect_fd = events[i].data.fd;
-                int read_len = read(connect_fd, read_buf, MAX_BUF_SIZE);
-                if (read_len < 0 && errno == ECONNRESET){
-                    cout << "ECONNRESET error" << endl;
-                    close(connect_fd);
-                }else if (read_len == 0){
-                    cout << "Socket close" << endl;
-                    close(connect_fd);
-                }else{
-                    cout << "Read from client: " << read_buf << endl;
-                    if (read_len != write(connect_fd, read_buf, read_len)){
-                        cout << "Write error" << endl;
-                    }
-                }
-            }
+            Channel * pChannel = static_cast<Channel*>(_events[i].data.ptr);
+            pChannel->set_revents(_events[i].events);
+            channel_array.push_back(pChannel);
+        }
+        vector<Channel*>::iterator iter = channel_array.begin();
+        while(iter != channel_array.end()){
+            (*iter)->handle_events();
+            iter++;
         }
     }
 
+}
+
+void TcpServer::handle_events(int socket_fd){    
+    if(socket_fd == _listen_fd){
+        struct sockaddr_in client_addr;
+        socklen_t clilen = sizeof(struct sockaddr_in);
+        int connect_fd = accept(_listen_fd, (sockaddr*)&client_addr, (socklen_t*)&clilen);
+        if (connect_fd > 0){
+            cout << "Client Connect From " << inet_ntoa(client_addr.sin_addr) << ":" 
+            << ntohs(client_addr.sin_port) << " with connect fd " << connect_fd << endl;
+        }else{
+            cout << "Accept error: " << errno << endl;
+        }
+        Channel* pChannel = new Channel(_epoll_fd, connect_fd); // TODO Memory Leak
+        pChannel->enable_read();
+        pChannel->set_callback(this);
+    } else {
+        char read_buf[MAX_BUF_SIZE];
+        bzero(read_buf, MAX_BUF_SIZE);
+        int read_len = read(socket_fd, read_buf, MAX_BUF_SIZE);
+        if (read_len < 0 && errno == ECONNRESET){
+            cout << "ECONNRESET error" << endl;
+            close(socket_fd);
+        }else if (read_len == 0){
+            cout << "Socket close" << endl;
+            close(socket_fd);
+        }else{
+            cout << "Read from client: " << read_buf << endl;
+            if (read_len != write(socket_fd, read_buf, read_len)){
+                cout << "Write error" << endl;
+            }
+        }
+    }
 }
