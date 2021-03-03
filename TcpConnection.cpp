@@ -1,7 +1,8 @@
 #include "TcpConnection.h"
+#include "Channel.h"
 
-TcpConnection::TcpConnection(int epoll_fd, int socket_fd):_epoll_fd(epoll_fd),_socket_fd(socket_fd){
-    _channel = new Channel(_epoll_fd, _socket_fd);
+TcpConnection::TcpConnection(EventLoop* loop, int socket_fd):_loop(loop),_socket_fd(socket_fd){
+    _channel = new Channel(_loop, _socket_fd); // TODO Memory Leak
     _channel->enable_read();
     _channel->set_callback(this);
 }

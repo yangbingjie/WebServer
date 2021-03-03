@@ -1,12 +1,13 @@
 #include "Acceptor.h"
-Acceptor::Acceptor(int epoll_fd):_epoll_fd(epoll_fd), _listen_fd(-1), _channel(NULL), _callbacks(NULL){
+#include "Channel.h"
+Acceptor::Acceptor(EventLoop* loop):_loop(loop),_listen_fd(-1), _channel(NULL), _callbacks(NULL){
 
 }
 Acceptor::~Acceptor(){}
 
 void Acceptor::start(){
     _listen_fd = create_socket();
-    _channel = new Channel(_epoll_fd, _listen_fd); // TODO Memory Leak
+    _channel = new Channel(_loop, _listen_fd); // TODO Memory Leak
     _channel->enable_read();
     _channel->set_callback(this);
 }
