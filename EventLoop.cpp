@@ -2,7 +2,10 @@
 #include "Epoll.h"
 #include "Channel.h"
 EventLoop::EventLoop():_killed(false), _epoll(new Epoll()){// TODO Memory Leak
-    _event_fd = create_eventfd();
+    _eventfd = create_eventfd();
+    _eventfd_channel = new Channel(this, _eventfd); // TODO Memory Leak
+    _eventfd_channel->enable_read();
+    _eventfd_channel->set_callback(this);
 }
 EventLoop::~EventLoop(){
 
@@ -34,7 +37,7 @@ void EventLoop::queue_loop(IRun* run){
 }
 void EventLoop::wakeup(){
     uint64_t one = 1;
-    ssize_t len = write(_event_fd, &one, sizeof(one));
+    ssize_t len = write(_eventfd, &one, sizeof(one));
     if (len != sizeof(one))
     {
         cout << "EventLoop::wakeup() write " << len << " bytes" << endl;
@@ -42,7 +45,7 @@ void EventLoop::wakeup(){
 }
 void EventLoop::handle_read(){
     uint64_t one = 1;
-    ssize_t len = read(_event_fd, &one, sizeof(one));
+    ssize_t len = read(_eventfd, &one, sizeof(one));
     if (len != sizeof(one))
     {
         cout << "EventLoop::handle_read() write " << len << " bytes" << endl;

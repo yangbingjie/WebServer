@@ -10,8 +10,13 @@ string Buffer::value() const{
 int Buffer::size(){
     return _buffer.size();
 }
-void Buffer::substr(int len){
+void Buffer::retrieve(int len){
     _buffer = _buffer.substr(len, _buffer.size());
+}
+string Buffer::retrieveAndReturn(int len){
+    string str(_buffer, 0, len);
+    retrieve(len);
+    return str;
 }
 void Buffer::append(const string& str){
     _buffer.append(str);

@@ -9,10 +9,11 @@
 #include "sys/eventfd.h"
 #include "Declare.h"
 #include "IRun.h"
+#include "IChannelCallBack.h"
 
 using namespace std;
 
-class EventLoop{
+class EventLoop : public IChannelCallBack{
     public:
         EventLoop();
         ~EventLoop();
@@ -27,8 +28,9 @@ class EventLoop{
     private:
         bool _killed;
         Epoll* _epoll;
-        int _event_fd;
+        int _eventfd;
         vector<IRun*> _pending_functors;
+        Channel* _eventfd_channel;
 };
 
 #endif // _EVENT_LOOP_H_

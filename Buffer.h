@@ -9,7 +9,8 @@ public:
     const char* c_str();
     string value() const;
     int size();
-    void substr(int len);
+    void retrieve(int len);
+    string retrieveAndReturn(int len);
     void append(const string& str);
     bool empty();
 private:

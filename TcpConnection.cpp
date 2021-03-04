@@ -41,7 +41,7 @@ void TcpConnection::handle_write(){
         int len = write(socket_fd, _out_buffer.c_str(), _out_buffer.size());
         if (len > 0){
             cout << "Write " << len << " bytes" << endl;
-            _out_buffer.substr(len);
+            _out_buffer.retrieve(len);
             if(_out_buffer.empty()){
                 _channel->disable_write();
                 _loop->queue_loop(this);
