@@ -20,7 +20,8 @@ class TcpConnection: public IChannelCallBack{
 public:
     TcpConnection(EventLoop* loop, int socket_fd);
     ~TcpConnection(); 
-    virtual void handle_event(int socket_fd);
+    virtual void handle_read();
+    virtual void handle_write();
     void send(const string& data);
     void set_user(IUser* user);
     void connectEstablish();
@@ -29,5 +30,7 @@ private:
     Channel* _channel;
     EventLoop* _loop;
     IUser* _user;
+    string* _out_buffer;
+    string* _in_buffer;
 };
 #endif // _TCP_CONNECTION_H_

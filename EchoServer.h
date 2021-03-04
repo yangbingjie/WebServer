@@ -4,6 +4,7 @@
 #include "Declare.h"
 #include "TcpServer.h"
 #include "IUser.h"
+
 using namespace std;
 
 class EchoServer : public IUser{
@@ -12,7 +13,7 @@ public:
     ~EchoServer();
     void start();
     virtual void onConnect(TcpConnection* connection);
-    virtual void onMessage(TcpConnection* connection, const string& data);
+    virtual void onMessage(TcpConnection* connection, string* data);
 private:
     EventLoop* _loop;
     TcpServer _server;

@@ -16,7 +16,8 @@ class Acceptor: public IChannelCallBack{
 public:
     Acceptor(EventLoop* loop);
     ~Acceptor();
-    virtual void handle_event(int socket_fd);
+    virtual void handle_read();
+    virtual void handle_write();
     void start();
     int create_socket();
     void set_callback(IAcceptorCallBack* callback);

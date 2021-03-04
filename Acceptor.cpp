@@ -31,7 +31,7 @@ int Acceptor::create_socket(){
     return _listen_fd;
 }
 
-void Acceptor::handle_event(int socket_fd){
+void Acceptor::handle_read(){
     struct sockaddr_in client_addr;
     socklen_t clilen = sizeof(struct sockaddr_in);
     int connect_fd = accept(_listen_fd, (sockaddr*)&client_addr, (socklen_t*)&clilen);
@@ -44,6 +44,10 @@ void Acceptor::handle_event(int socket_fd){
     fcntl(connect_fd, F_SETFL, O_NONBLOCK);
     _callbacks->newConnection(connect_fd);
 }
+void Acceptor::handle_write(){
+
+}
+
 
 void Acceptor::set_callback(IAcceptorCallBack* callback){
     _callbacks = callback;

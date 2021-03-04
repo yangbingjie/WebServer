@@ -7,5 +7,4 @@ class Acceptor;
 class TcpConnection;
 class EventLoop;
 class Epoll;
-
 #endif // _DECLARE_H_

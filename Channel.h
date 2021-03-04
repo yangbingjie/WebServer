@@ -20,12 +20,18 @@ public:
     int get_event(){return _events;}
     int get_socket(){return _socket_fd;}
     void update();
+    bool is_writing();
+    void disable_write();
+    void enable_write();
+    void set_index(int index);
+    int get_index();
 private:
     int _socket_fd;
     int _events; // requested event
     int _revents; // returned events
     IChannelCallBack* _callbacks;
     EventLoop* _loop;
+    int _index;
 };
 
 #endif // _CHANNEL_H_

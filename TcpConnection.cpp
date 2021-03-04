@@ -2,7 +2,8 @@
 #include "Channel.h"
 #include "IUser.h"
 
-TcpConnection::TcpConnection(EventLoop* loop, int socket_fd):_loop(loop),_socket_fd(socket_fd){
+TcpConnection::TcpConnection(EventLoop* loop, int socket_fd):_loop(loop),_socket_fd(socket_fd), 
+_user(NULL), _in_buffer(new string()), _out_buffer(new string()){
     _channel = new Channel(_loop, _socket_fd); // TODO Memory Leak
     _channel->enable_read();
     _channel->set_callback(this);
@@ -10,7 +11,12 @@ TcpConnection::TcpConnection(EventLoop* loop, int socket_fd):_loop(loop),_socket
 TcpConnection::~TcpConnection(){
 
 }
-void TcpConnection::handle_event(int socket_fd){
+void TcpConnection::handle_read(){
+    int socket_fd = _channel->get_socket();
+    if (socket_fd < 0) {
+        cout << "EPOLLIN error sockfd" << socket_fd << "< 0"<< endl;
+        return;
+    }
     char read_buf[MAX_BUF_SIZE];
     bzero(read_buf, MAX_BUF_SIZE);
     int read_len = read(socket_fd, read_buf, MAX_BUF_SIZE);
@@ -22,16 +28,45 @@ void TcpConnection::handle_event(int socket_fd){
         close(socket_fd);
     }else{
         cout << "Read from client: " << read_buf << endl;
-        string buffer(read_buf, MAX_BUF_SIZE);
-        _user->onMessage(this, buffer);
+        _in_buffer->append(read_buf, MAX_BUF_SIZE);
+        _user->onMessage(this, _in_buffer);
+    }
+}
+
+void TcpConnection::handle_write(){
+    int socket_fd = _channel->get_socket();
+    if (_channel->is_writing())
+    {
+        int len = write(socket_fd, _out_buffer->c_str(), _out_buffer->size());
+        if (len > 0){
+            cout << "Write " << len << " bytes" << endl;
+            *_out_buffer = _out_buffer->substr(len, _out_buffer->size());
+            if(_out_buffer->empty()){
+                _channel->disable_write();
+            }
+        }
     }
 }
 
 void TcpConnection::send(const string& data){
-    int len = write(_socket_fd, data.c_str(), data.size());
-    if (len != data.size()){
-        cout << "Write error" << endl;
+    int len = 0;
+    if (_out_buffer->empty())
+    {
+        len = write(_socket_fd, data.c_str(), data.size());
+        if(len < 0){
+            cout << "Write error: " << errno << endl;
+        }
     }
+    if (len < static_cast<int>(data.size()))
+    {
+        *_out_buffer += data.substr(len, data.size());
+        if (_channel->is_writing())
+        {
+            _channel->enable_write();
+        }
+        
+    }
+    
 }
 
 void TcpConnection::set_user(IUser* user){

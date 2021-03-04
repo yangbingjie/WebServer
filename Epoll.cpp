@@ -19,8 +19,17 @@ void Epoll::poll(vector<Channel*>*channel_array){
     }
 }
 void Epoll::update(Channel* channel){
+    int index = channel->get_index();
     struct epoll_event ev;
     ev.data.ptr = channel;
     ev.events = channel->get_event();
-    epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, channel->get_socket(), &ev);
+    int socket_fd = channel->get_socket();
+    if (index == -1)
+    {        
+        channel->set_index(1);
+        epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, socket_fd, &ev);        
+    }else{
+        epoll_ctl(_epoll_fd, EPOLL_CTL_MOD, socket_fd, &ev);        
+    }
+
 }
