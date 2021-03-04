@@ -1,12 +1,12 @@
 #include <iostream>
 #include "EventLoop.h"
-#include "TcpServer.h"
+#include "EchoServer.h"
 using namespace std;
 
 int main(){
     EventLoop eventloop;
-    TcpServer tcpServer(&eventloop);
-    tcpServer.start();
+    EchoServer server(&eventloop);
+    server.start();
     eventloop.loop();
     return 0;
 }

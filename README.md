@@ -1,2 +1,2 @@
 # WebServer
-A C++ implementation of web sever
+A C++ implementation of web server

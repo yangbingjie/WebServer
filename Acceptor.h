@@ -10,7 +10,7 @@
 #include "Declare.h"
 
 #define PORT 6978
-#define MAX_LISTEN 10
+#define MAX_LISTEN 10 
 using namespace std;
 class Acceptor: public IChannelCallBack{
 public:

@@ -17,11 +17,11 @@ int Acceptor::create_socket(){
     fcntl(_listen_fd, F_SETFL, O_NONBLOCK);
     int on = 1;
     setsockopt(_listen_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-    struct sockaddr_in sever_addr;
-    sever_addr.sin_family = AF_INET;
-    sever_addr.sin_port = htons(PORT);
-    sever_addr.sin_addr.s_addr = htons(INADDR_ANY);
-    if (-1 == bind(_listen_fd, (sockaddr*)&sever_addr, sizeof(sever_addr))){
+    struct sockaddr_in server_addr;
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(PORT);
+    server_addr.sin_addr.s_addr = htons(INADDR_ANY);
+    if (-1 == bind(_listen_fd, (sockaddr*)&server_addr, sizeof(server_addr))){
         cout << "Bind error: " << errno << endl;
     }
 
