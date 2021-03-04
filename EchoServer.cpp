@@ -12,10 +12,12 @@ void EchoServer::start(){
 void EchoServer::onConnect(TcpConnection* connection){
     cout << "onConnect" << endl;
 }
-void EchoServer::onMessage(TcpConnection* connection, string* data){
+void EchoServer::onMessage(TcpConnection* connection, Buffer* data){
     while(data->size() > MESSAGE_LENGTH){
-        string message = data->substr(0, MESSAGE_LENGTH);
-        *data = data->substr(MESSAGE_LENGTH, data->size());
-        connection->send(message + "\n");
+        data->substr(MESSAGE_LENGTH);
+        connection->send(data->value() + "\n");
     }
+}
+void EchoServer::onWriteComplate(TcpConnection* connection){
+    cout << "onWriteComplate" << endl;
 }

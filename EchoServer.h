@@ -13,7 +13,8 @@ public:
     ~EchoServer();
     void start();
     virtual void onConnect(TcpConnection* connection);
-    virtual void onMessage(TcpConnection* connection, string* data);
+    virtual void onMessage(TcpConnection* connection, Buffer* data);
+    virtual void onWriteComplate(TcpConnection* connection);
 private:
     EventLoop* _loop;
     TcpServer _server;

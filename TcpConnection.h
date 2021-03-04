@@ -10,16 +10,19 @@
 #include <string>
 #include "Declare.h"
 #include "IUser.h"
+#include "IRun.h"
+#include "Buffer.h"
 #include "IChannelCallBack.h"
 
 
 #define MAX_BUF_SIZE 100
 
 using namespace std;
-class TcpConnection: public IChannelCallBack{
+class TcpConnection: public IChannelCallBack, public IRun{
 public:
     TcpConnection(EventLoop* loop, int socket_fd);
     ~TcpConnection(); 
+    virtual void run();
     virtual void handle_read();
     virtual void handle_write();
     void send(const string& data);
@@ -30,7 +33,7 @@ private:
     Channel* _channel;
     EventLoop* _loop;
     IUser* _user;
-    string* _out_buffer;
-    string* _in_buffer;
+    Buffer _out_buffer;
+    Buffer _in_buffer;
 };
 #endif // _TCP_CONNECTION_H_
