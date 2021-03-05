@@ -22,7 +22,7 @@ class TcpConnection: public IChannelCallBack, public IRun{
 public:
     TcpConnection(EventLoop* loop, int socket_fd);
     ~TcpConnection(); 
-    virtual void run();
+    virtual void run(void* args);
     virtual void handle_read();
     virtual void handle_write();
     void send(const string& data);

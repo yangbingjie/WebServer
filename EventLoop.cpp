@@ -1,7 +1,11 @@
 #include "EventLoop.h"
 #include "Epoll.h"
 #include "Channel.h"
-EventLoop::EventLoop():_killed(false), _epoll(new Epoll()){// TODO Memory Leak
+#include "TimerQueue.h"
+EventLoop::EventLoop():_killed(false),
+ _epoll(new Epoll()), // TODO Memory Leak
+ _timer_queue(new TimerQueue(this)) // TODO Memory Leak
+ {
     _eventfd = create_eventfd();
     _eventfd_channel = new Channel(this, _eventfd); // TODO Memory Leak
     _eventfd_channel->enable_read();
@@ -31,8 +35,9 @@ void EventLoop::loop(){
 void EventLoop::update(Channel* channel){
     _epoll->update(channel);
 }
-void EventLoop::queue_loop(IRun* run){
-    _pending_functors.push_back(run);
+void EventLoop::queue_loop(IRun* run, void* arg){
+    Runner r(run, arg);
+    _pending_functors.push_back(r);
     wakeup();
 }
 void EventLoop::wakeup(){
@@ -54,10 +59,22 @@ void EventLoop::handle_read(){
 void EventLoop::handle_write(){
 }
 void EventLoop::run_pending_functors(){
-    vector<IRun*> tmp;
+    vector<Runner> tmp;
     tmp.swap(_pending_functors);
-    vector<IRun*>::iterator it;
+    vector<Runner>::iterator it;
     for (it = tmp.begin(); it != tmp.end();++it){
-        (*it)->run();
+        it->do_run();
     }
+}
+long EventLoop::run_at(Timestamp when, IRun* run){
+    return _timer_queue->add_timer(run, when, 0.0);
+}
+long EventLoop::run_after(double delay, IRun* run){
+    return _timer_queue->add_timer(run, Timestamp::nowAfter(delay), 0.0);
+}
+long EventLoop::run_every(double interval, IRun* run){
+    return _timer_queue->add_timer(run, Timestamp::nowAfter(interval), interval);
+}
+void EventLoop::cancel_timer(long timer_id){
+    _timer_queue->cancel_timer(timer_id);
 }

@@ -44,7 +44,7 @@ void TcpConnection::handle_write(){
             _out_buffer.retrieve(len);
             if(_out_buffer.empty()){
                 _channel->disable_write();
-                _loop->queue_loop(this);
+                _loop->queue_loop(this, NULL);
             }
         }
     }
@@ -60,7 +60,7 @@ void TcpConnection::send(const string& data){
         }
         if (len == static_cast<int>(data.size()))
         {
-            _loop->queue_loop(this); // Invoke onWriteComplate
+            _loop->queue_loop(this, NULL); // Invoke onWriteComplate
         }
         
     }
@@ -85,6 +85,6 @@ void TcpConnection::connectEstablish(){
         _user->onConnect(this);
     }
 }
-void TcpConnection::run(){
+void TcpConnection::run(void* args){
     _user->onWriteComplate(this);
 }
