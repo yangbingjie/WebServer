@@ -38,7 +38,6 @@ void EventLoop::update(Channel* channel){
 void EventLoop::queue_loop(IRun* run, void* arg){
     Runner r(run, arg);
     _pending_functors.push_back(r);
-    wakeup();
 }
 void EventLoop::wakeup(){
     uint64_t one = 1;

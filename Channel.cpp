@@ -1,7 +1,7 @@
 #include "Channel.h"
 #include "EventLoop.h"
-Channel::Channel(EventLoop* loop, int socket_fd):_loop(loop),
- _socket_fd(socket_fd),_events(0),_revents(0), _callbacks(NULL), _index(-1){
+Channel::Channel(EventLoop* loop, int fd):_loop(loop),
+ _fd(fd),_events(0),_revents(0), _callbacks(NULL), _index(-1){
 }
 Channel::~Channel(){
 

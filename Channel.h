@@ -7,7 +7,7 @@
 
 class Channel{
 public:
-    Channel(EventLoop* loop, int socket_fd);
+    Channel(EventLoop* loop, int fd);
     ~Channel();
     void handle_event();
     void enable_read();
@@ -18,7 +18,7 @@ public:
         _revents = revents;
     }
     int get_event(){return _events;}
-    int get_socket(){return _socket_fd;}
+    int get_fd(){return _fd;}
     void update();
     bool is_writing();
     void disable_write();
@@ -26,7 +26,7 @@ public:
     void set_index(int index);
     int get_index();
 private:
-    int _socket_fd;
+    int _fd;
     int _events; // requested event
     int _revents; // returned events
     IChannelCallBack* _callbacks;

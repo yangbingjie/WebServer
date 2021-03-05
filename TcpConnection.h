@@ -30,7 +30,7 @@ public:
     void connectEstablish();
 private:
     int _socket_fd;
-    Channel* _channel;
+    Channel* _connect_channel;
     EventLoop* _loop;
     IUser* _user;
     Buffer _out_buffer;

@@ -23,7 +23,7 @@ public:
     void set_callback(IAcceptorCallBack* callback);
 private:
     int _listen_fd;
-    Channel* _channel;
+    Channel* _listen_channel;
     IAcceptorCallBack* _callbacks;
     EventLoop* _loop;
 };

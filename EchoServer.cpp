@@ -25,8 +25,9 @@ void EchoServer::onWriteComplate(TcpConnection* connection){
     cout << "onWriteComplate" << endl;
 }
 void EchoServer::run(void* args){
-    cout << _index << endl;
+    cout << _index;
     if(_index++ > 3){
+        cout << ", Timeout!" << endl;
         _loop->cancel_timer(_timer);
         _index = 0;
     }

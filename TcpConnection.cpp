@@ -5,15 +5,15 @@
 
 TcpConnection::TcpConnection(EventLoop* loop, int socket_fd):_loop(loop),_socket_fd(socket_fd), 
 _user(NULL){
-    _channel = new Channel(_loop, _socket_fd); // TODO Memory Leak
-    _channel->enable_read();
-    _channel->set_callback(this);
+    _connect_channel = new Channel(_loop, _socket_fd); // TODO Memory Leak
+    _connect_channel->enable_read();
+    _connect_channel->set_callback(this);
 }
 TcpConnection::~TcpConnection(){
 
 }
 void TcpConnection::handle_read(){
-    int socket_fd = _channel->get_socket();
+    int socket_fd = _connect_channel->get_socket();
     if (socket_fd < 0) {
         cout << "EPOLLIN error sockfd" << socket_fd << "< 0"<< endl;
         return;
@@ -35,15 +35,15 @@ void TcpConnection::handle_read(){
 }
 
 void TcpConnection::handle_write(){
-    int socket_fd = _channel->get_socket();
-    if (_channel->is_writing())
+    int socket_fd = _connect_channel->get_socket();
+    if (_connect_channel->is_writing())
     {
         int len = write(socket_fd, _out_buffer.c_str(), _out_buffer.size());
         if (len > 0){
             cout << "Write " << len << " bytes" << endl;
             _out_buffer.retrieve(len);
             if(_out_buffer.empty()){
-                _channel->disable_write();
+                _connect_channel->disable_write();
                 _loop->queue_loop(this, NULL);
             }
         }
@@ -67,9 +67,9 @@ void TcpConnection::send(const string& data){
     if (len < static_cast<int>(data.size()))
     {
         _out_buffer.append(data.substr(len, data.size()));
-        if (_channel->is_writing())
+        if (_connect_channel->is_writing())
         {
-            _channel->enable_write();
+            _connect_channel->enable_write();
         }
         
     }
