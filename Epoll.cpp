@@ -23,7 +23,7 @@ void Epoll::update(Channel* channel){
     struct epoll_event ev;
     ev.data.ptr = channel;
     ev.events = channel->get_event();
-    int socket_fd = channel->get_socket();
+    int socket_fd = channel->get_fd();
     if (index == -1)
     {        
         channel->set_index(1);

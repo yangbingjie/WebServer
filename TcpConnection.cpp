@@ -13,7 +13,7 @@ TcpConnection::~TcpConnection(){
 
 }
 void TcpConnection::handle_read(){
-    int socket_fd = _connect_channel->get_socket();
+    int socket_fd = _connect_channel->get_fd();
     if (socket_fd < 0) {
         cout << "EPOLLIN error sockfd" << socket_fd << "< 0"<< endl;
         return;
@@ -35,7 +35,7 @@ void TcpConnection::handle_read(){
 }
 
 void TcpConnection::handle_write(){
-    int socket_fd = _connect_channel->get_socket();
+    int socket_fd = _connect_channel->get_fd();
     if (_connect_channel->is_writing())
     {
         int len = write(socket_fd, _out_buffer.c_str(), _out_buffer.size());
