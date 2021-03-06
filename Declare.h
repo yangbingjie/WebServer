@@ -9,4 +9,5 @@ class EventLoop;
 class Epoll;
 class Buffer;
 class TimerQueue;
+
 #endif // _DECLARE_H_

@@ -18,14 +18,16 @@
 #define MAX_BUF_SIZE 100
 
 using namespace std;
-class TcpConnection: public IChannelCallBack, public IRun{
+class TcpConnection: public IChannelCallBack, public IRun0, public IRun2{
 public:
     TcpConnection(EventLoop* loop, int socket_fd);
     ~TcpConnection(); 
-    virtual void run(void* args);
+    virtual void run0();
+    virtual void run2(const string& message, void* param);
     virtual void handle_read();
     virtual void handle_write();
     void send(const string& data);
+    void send_in_loop(const string& data);
     void set_user(IUser* user);
     void connectEstablish();
 private:

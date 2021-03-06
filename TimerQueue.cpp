@@ -6,12 +6,12 @@
 #include "Channel.h"
 #include "EventLoop.h"
 #include "Timestamp.h"
+#include "Task.h"
 #define UINTPOINT_MAX 0xffffffff
+
 
 TimerQueue::TimerQueue(EventLoop* loop)
 :_loop(loop), _timefd(create_timerfd()),
- _add_timer_wrapper(new AddTimerWrapper(this)), // TODO Memory Leak
- _cancel_timer_wrapper(new CancelTimerWrapper(this)),
  _timefd_channel(new Channel(_loop, _timefd)) // TODO Memory Leak
 {
     _timefd_channel->set_callback(this);
@@ -20,12 +20,13 @@ TimerQueue::TimerQueue(EventLoop* loop)
 TimerQueue::~TimerQueue(){
     close(_timefd);
 }
-long TimerQueue::add_timer(IRun* run, Timestamp when, double interval){
+long TimerQueue::add_timer(IRun0* run, Timestamp when, double interval){
     Timer* timer = new Timer(run, when, interval); // TODO Memory Leak
-    _loop->queue_loop(_add_timer_wrapper, timer);
+    Task task(this, "add timer", timer);
+    _loop->queue_loop(task);
     return (long)timer; // return the address of timer object
 }
-void TimerQueue::do_add_timer(void* args){
+void TimerQueue::do_add_timer(Timer* args){
     Timer* timer = static_cast<Timer*>(args);
     if (insert(timer))
     {
@@ -33,9 +34,11 @@ void TimerQueue::do_add_timer(void* args){
     }
 }
 void TimerQueue::cancel_timer(long timer_id){
-    _loop->queue_loop(_cancel_timer_wrapper, (void*)timer_id);
+    Timer* timer = (Timer*)(timer_id);
+    Task task(this, "cancel_timer", timer);
+    _loop->queue_loop(task);
 }
-void TimerQueue::do_cancel_timer(void* args){
+void TimerQueue::do_cancel_timer(Timer* args){
     Timer* timer = static_cast<Timer*>(args);
     for(auto iter = _time_list.begin(); iter != _time_list.end(); ++iter){
         if(iter->second == timer){
@@ -128,7 +131,18 @@ void TimerQueue::handle_read(){
     read_timerfd(_timefd, now);
     vector<TimePair> expired = get_expired(now);
     for (auto iter = expired.begin(); iter != expired.end();++iter){
-        iter->second->run();
+        iter->second->timeout();
     }
     reset(expired, now);
+}
+
+void TimerQueue::run2(const string& str, void* timer){
+    if(str == "addtimer")
+    {
+        do_add_timer((Timer*)timer);
+    }
+    else if(str == "canceltimer")
+    {
+        do_cancel_timer((Timer*)timer);
+    }
 }

@@ -2,6 +2,7 @@
 #include "Channel.h"
 #include "IUser.h"
 #include "EventLoop.h"
+#include "Task.h"
 
 TcpConnection::TcpConnection(EventLoop* loop, int socket_fd):_loop(loop),_socket_fd(socket_fd), 
 _user(NULL){
@@ -44,13 +45,23 @@ void TcpConnection::handle_write(){
             _out_buffer.retrieve(len);
             if(_out_buffer.empty()){
                 _connect_channel->disable_write();
-                _loop->queue_loop(this, NULL);
+                Task task(this);
+                _loop->queue_loop(task);
             }
         }
     }
 }
 
-void TcpConnection::send(const string& data){
+void TcpConnection::send(const string& message){
+    if(_loop->is_in_loop_thread()){
+        send_in_loop(message);
+    }else{
+        Task task(this, message, this);
+        _loop->run_in_loop(task);
+    }
+}
+
+void TcpConnection::send_in_loop(const string& data){
     int len = 0;
     if (_out_buffer.empty())
     {
@@ -60,7 +71,8 @@ void TcpConnection::send(const string& data){
         }
         if (len == static_cast<int>(data.size()))
         {
-            _loop->queue_loop(this, NULL); // Invoke onWriteComplate
+            Task task(this);
+            _loop->queue_loop(task); // Invoke onWriteComplate
         }
         
     }
@@ -85,6 +97,9 @@ void TcpConnection::connectEstablish(){
         _user->onConnect(this);
     }
 }
-void TcpConnection::run(void* args){
+void TcpConnection::run0(){
     _user->onWriteComplate(this);
+}
+void TcpConnection::run2(const string& message, void* args){
+    send_in_loop(message);
 }

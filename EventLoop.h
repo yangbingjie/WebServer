@@ -11,6 +11,9 @@
 #include "IRun.h"
 #include "Timestamp.h"
 #include "IChannelCallBack.h"
+#include "Mutex.h"
+#include "ThreadPool.h"
+#include "Task.h"
 
 using namespace std;
 
@@ -21,35 +24,29 @@ public:
     int create_eventfd();
     void loop();
     void update(Channel* channel);
-    void queue_loop(IRun* run, void* args);
+    void queue_loop(Task task);
     void wakeup();
     void handle_read();
     void handle_write();
     void run_pending_functors();
+    void run_in_loop(Task f);
+    bool is_in_loop_thread();
 
-    long run_at(Timestamp when, IRun* run);
-    long run_after(double delay, IRun* run);
-    long run_every(double interval, IRun* run);
+    long run_at(Timestamp when, IRun0* run);
+    long run_after(double delay, IRun0* run);
+    long run_every(double interval, IRun0* run);
     void cancel_timer(long timer_id);
-
-    class Runner{
-    public:
-        Runner(IRun* run, void* args):_run(run), _args(args){}
-        void do_run(){
-            _run->run(_args);
-        }
-    private:
-        IRun* _run;
-        void* _args;
-    };
 private:
     bool _killed;
     Epoll* _epoll;
     int _eventfd;
-    vector<Runner> _pending_functors;
+    vector<Task> _pending_functors;
     Channel* _eventfd_channel;
     TimerQueue* _timer_queue;
     int _timer;
+    const pid_t _thread_id;
+    bool _calling_pending_func;
+    Mutex _mutex;
 };
 
 #endif // _EVENT_LOOP_H_

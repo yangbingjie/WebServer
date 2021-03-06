@@ -2,9 +2,12 @@
 #include "Epoll.h"
 #include "Channel.h"
 #include "TimerQueue.h"
+
 EventLoop::EventLoop():_killed(false),
+_calling_pending_func(false),
  _epoll(new Epoll()), // TODO Memory Leak
- _timer_queue(new TimerQueue(this)) // TODO Memory Leak
+ _timer_queue(new TimerQueue(this)), // TODO Memory Leak
+ _thread_id(CurrentThread::tid())
  {
     _eventfd = create_eventfd();
     _eventfd_channel = new Channel(this, _eventfd); // TODO Memory Leak
@@ -35,9 +38,25 @@ void EventLoop::loop(){
 void EventLoop::update(Channel* channel){
     _epoll->update(channel);
 }
-void EventLoop::queue_loop(IRun* run, void* arg){
-    Runner r(run, arg);
-    _pending_functors.push_back(r);
+void EventLoop::queue_loop(Task task){
+    {
+        _mutex.lock();
+        _pending_functors.push_back(task);
+        _mutex.unlock();
+    }
+    if(!is_in_loop_thread()|| _calling_pending_func){
+        wakeup();
+    }
+}
+void EventLoop::run_in_loop(Task f){
+    if(is_in_loop_thread()){
+        f.do_task();
+    }else{
+        queue_loop(f);
+    }
+}
+bool EventLoop::is_in_loop_thread(){
+    return _thread_id == CurrentThread::tid();
 }
 void EventLoop::wakeup(){
     uint64_t one = 1;
@@ -58,20 +77,26 @@ void EventLoop::handle_read(){
 void EventLoop::handle_write(){
 }
 void EventLoop::run_pending_functors(){
-    vector<Runner> tmp;
-    tmp.swap(_pending_functors);
-    vector<Runner>::iterator it;
-    for (it = tmp.begin(); it != tmp.end();++it){
-        it->do_run();
+    vector<Task> tmp;
+    _calling_pending_func = true;
+    {
+        _mutex.lock();
+        tmp.swap(_pending_functors);
+        _mutex.unlock();
     }
+    vector<Task>::iterator it;
+    for (it = tmp.begin(); it != tmp.end();++it){
+         it->do_task();
+    }
+    _calling_pending_func = false;
 }
-long EventLoop::run_at(Timestamp when, IRun* run){
+long EventLoop::run_at(Timestamp when, IRun0* run){
     return _timer_queue->add_timer(run, when, 0.0);
 }
-long EventLoop::run_after(double delay, IRun* run){
+long EventLoop::run_after(double delay, IRun0* run){
     return _timer_queue->add_timer(run, Timestamp::nowAfter(delay), 0.0);
 }
-long EventLoop::run_every(double interval, IRun* run){
+long EventLoop::run_every(double interval, IRun0* run){
     return _timer_queue->add_timer(run, Timestamp::nowAfter(interval), interval);
 }
 void EventLoop::cancel_timer(long timer_id){
